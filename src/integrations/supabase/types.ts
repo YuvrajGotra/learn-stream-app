@@ -14,7 +14,116 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      attendance_records: {
+        Row: {
+          attendance_type: string
+          class_id: string
+          created_at: string | null
+          id: string
+          marked_at: string | null
+          marked_by: string | null
+          session_data: Json | null
+          status: string
+          student_id: string
+        }
+        Insert: {
+          attendance_type: string
+          class_id: string
+          created_at?: string | null
+          id?: string
+          marked_at?: string | null
+          marked_by?: string | null
+          session_data?: Json | null
+          status?: string
+          student_id: string
+        }
+        Update: {
+          attendance_type?: string
+          class_id?: string
+          created_at?: string | null
+          id?: string
+          marked_at?: string | null
+          marked_by?: string | null
+          session_data?: Json | null
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classes: {
+        Row: {
+          class_code: string
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          teacher_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          class_code: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          teacher_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          class_code?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          teacher_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          profile_picture_url: string | null
+          role: string
+          student_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          profile_picture_url?: string | null
+          role?: string
+          student_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          profile_picture_url?: string | null
+          role?: string
+          student_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
