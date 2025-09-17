@@ -181,7 +181,6 @@ export const QRAttendance: React.FC<QRAttendanceProps> = ({ userRole, currentCla
                         if (text) handleDecode(text);
                       }}
                       components={{
-                        audio: false,
                         torch: true,
                         finder: true,
                       }}
