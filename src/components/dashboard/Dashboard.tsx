@@ -4,6 +4,7 @@ import { AttendanceWidget } from './AttendanceWidget';
 import { QRAttendance } from './QRAttendance';
 import { ScheduleWidget } from './ScheduleWidget';
 import { ActivitySuggestions } from './ActivitySuggestions';
+import { FaceRecognition } from './FaceRecognition';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -17,10 +18,9 @@ import {
 
 interface DashboardProps {
   userRole: 'student' | 'teacher';
-  userName: string;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ userRole, userName }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
   const [activeView, setActiveView] = useState('dashboard');
 
   // Mock data - in a real app, this would come from API
@@ -48,7 +48,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole, userName }) => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">
-              Welcome back, {userName}!
+              Welcome to your Dashboard!
             </h1>
             <p className="text-white/90">
               {userRole === 'student' 
@@ -140,6 +140,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole, userName }) => {
         <div className="space-y-6">
           <AttendanceWidget data={mockAttendanceData} userRole={userRole} />
           <QRAttendance userRole={userRole} />
+          <FaceRecognition userRole={userRole} />
           
           {userRole === 'teacher' && (
             <Card className="p-6 bg-gradient-card shadow-card">
