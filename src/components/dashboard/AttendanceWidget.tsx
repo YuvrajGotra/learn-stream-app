@@ -11,12 +11,14 @@ interface AttendanceData {
 }
 
 interface AttendanceWidgetProps {
-  data: AttendanceData;
+  data: AttendanceData | null;
   userRole: 'student' | 'teacher';
 }
 
 export const AttendanceWidget: React.FC<AttendanceWidgetProps> = ({ data, userRole }) => {
-  const attendanceRate = Math.round((data.present / data.total) * 100);
+  // Provide default values if data is null or undefined
+  const attendanceData = data || { present: 0, absent: 0, late: 0, total: 0 };
+  const attendanceRate = attendanceData.total > 0 ? Math.round((attendanceData.present / attendanceData.total) * 100) : 0;
   
   return (
     <Card className="p-6 bg-gradient-card shadow-card">
@@ -39,7 +41,7 @@ export const AttendanceWidget: React.FC<AttendanceWidgetProps> = ({ data, userRo
           <div className="space-y-1">
             <div className="flex items-center justify-center text-success">
               <CheckCircle className="h-4 w-4 mr-1" />
-              <span className="font-semibold">{data.present}</span>
+              <span className="font-semibold">{attendanceData.present}</span>
             </div>
             <p className="text-xs text-muted-foreground">Present</p>
           </div>
@@ -47,7 +49,7 @@ export const AttendanceWidget: React.FC<AttendanceWidgetProps> = ({ data, userRo
           <div className="space-y-1">
             <div className="flex items-center justify-center text-warning">
               <Clock className="h-4 w-4 mr-1" />
-              <span className="font-semibold">{data.late}</span>
+              <span className="font-semibold">{attendanceData.late}</span>
             </div>
             <p className="text-xs text-muted-foreground">Late</p>
           </div>
@@ -55,7 +57,7 @@ export const AttendanceWidget: React.FC<AttendanceWidgetProps> = ({ data, userRo
           <div className="space-y-1">
             <div className="flex items-center justify-center text-destructive">
               <XCircle className="h-4 w-4 mr-1" />
-              <span className="font-semibold">{data.absent}</span>
+              <span className="font-semibold">{attendanceData.absent}</span>
             </div>
             <p className="text-xs text-muted-foreground">Absent</p>
           </div>

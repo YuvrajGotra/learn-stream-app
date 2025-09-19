@@ -97,6 +97,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   const DashboardContent = () => (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Welcome Header */}
@@ -144,7 +152,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
             <div>
               <p className="text-sm text-muted-foreground">Attendance Rate</p>
               <p className="text-2xl font-bold text-success">
-                {attendanceData ? Math.round((attendanceData.present / Math.max(attendanceData.total, 1)) * 100) : 0}%
+                {attendanceData && attendanceData.total > 0 
+                  ? Math.round((attendanceData.present / attendanceData.total) * 100)
+                  : 0
+                }%
               </p>
             </div>
             <BarChart3 className="h-8 w-8 text-success/50" />
