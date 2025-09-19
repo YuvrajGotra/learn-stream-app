@@ -13,11 +13,12 @@ interface ClassSchedule {
 }
 
 interface ScheduleWidgetProps {
-  schedule: ClassSchedule[];
+  schedule: any[];
   userRole: 'student' | 'teacher';
+  onScheduleUpdate?: () => void;
 }
 
-export const ScheduleWidget: React.FC<ScheduleWidgetProps> = ({ schedule, userRole }) => {
+export const ScheduleWidget: React.FC<ScheduleWidgetProps> = ({ schedule, userRole, onScheduleUpdate }) => {
   const currentTime = new Date();
   const currentHour = currentTime.getHours();
   

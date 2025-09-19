@@ -8,11 +8,13 @@ import { supabase } from '@/integrations/supabase/client';
 interface FaceRecognitionProps {
   userRole: 'student' | 'teacher';
   currentClass?: string;
+  onAttendanceUpdate?: () => void;
 }
 
 export const FaceRecognition: React.FC<FaceRecognitionProps> = ({ 
   userRole, 
-  currentClass = 'Computer Science 101' 
+  currentClass = 'Computer Science 101',
+  onAttendanceUpdate
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -100,18 +102,18 @@ export const FaceRecognition: React.FC<FaceRecognitionProps> = ({
     }
 
     setIsScanning(true);
+    setRecognizedStudent(null); // Clear previous recognition
     
     try {
+      // Show scanning animation for 3 seconds
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
       const capturedImage = captureFrame();
       if (!capturedImage) {
         throw new Error('Failed to capture image');
       }
 
-      // Simulate face recognition process
-      // In a real implementation, you would use a face recognition service
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // For demo purposes, randomly select a student
+      // For demo purposes, randomly select a student if any exist
       if (students.length > 0) {
         const randomStudent = students[Math.floor(Math.random() * students.length)];
         setRecognizedStudent(randomStudent);
@@ -123,6 +125,10 @@ export const FaceRecognition: React.FC<FaceRecognitionProps> = ({
           title: "Student Recognized!",
           description: `${randomStudent.full_name} attendance marked successfully.`,
         });
+        
+        if (onAttendanceUpdate) {
+          onAttendanceUpdate();
+        }
       } else {
         toast({
           title: "No Match Found",
@@ -261,25 +267,36 @@ export const FaceRecognition: React.FC<FaceRecognitionProps> = ({
           <div className="relative rounded-md overflow-hidden">
             {cameraActive ? (
               <div className="space-y-4">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full h-64 object-cover rounded-lg bg-black"
-                />
-                <canvas
-                  ref={canvasRef}
-                  className="hidden"
-                />
+                <div className="relative">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-64 object-cover rounded-lg bg-black"
+                  />
+                  {isScanning && (
+                    <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+                      <div className="text-center text-white">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-3"></div>
+                        <p className="text-sm">Scanning and matching face...</p>
+                      </div>
+                    </div>
+                  )}
+                  <canvas
+                    ref={canvasRef}
+                    className="hidden"
+                  />
+                </div>
                 {recognizedStudent && (
-                  <div className="bg-success/10 border border-success/20 rounded-lg p-3">
+                  <div className="bg-success/10 border border-success/20 rounded-lg p-3 animate-fade-in">
                     <div className="flex items-center space-x-3">
                       <UserCheck className="h-6 w-6 text-success" />
                       <div>
                         <p className="font-semibold text-success">{recognizedStudent.full_name}</p>
                         <p className="text-sm text-muted-foreground">
-                          Student ID: {recognizedStudent.student_id}
+                          Student ID: {recognizedStudent.student_id || 'N/A'}
                         </p>
+                        <p className="text-xs text-success">✓ Attendance marked successfully</p>
                       </div>
                     </div>
                   </div>

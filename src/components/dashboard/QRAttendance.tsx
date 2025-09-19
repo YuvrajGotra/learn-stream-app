@@ -10,6 +10,7 @@ import { QrCode, Scan, CheckCircle, Timer, Camera, StopCircle, ClockAlert } from
 interface QRAttendanceProps {
   userRole: 'student' | 'teacher';
   currentClass?: string;
+  onAttendanceUpdate?: () => void;
 }
 
 // Simple unique id generator (no external dep)
@@ -27,7 +28,7 @@ interface AttendancePayload {
   expiresAt: string; // ISO
 }
 
-export const QRAttendance: React.FC<QRAttendanceProps> = ({ userRole, currentClass = 'Computer Science 101' }) => {
+export const QRAttendance: React.FC<QRAttendanceProps> = ({ userRole, currentClass = 'Computer Science 101', onAttendanceUpdate }) => {
   // Common
   const [scanStatus, setScanStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
 
@@ -86,7 +87,10 @@ export const QRAttendance: React.FC<QRAttendanceProps> = ({ userRole, currentCla
       setErrorMsg('');
       setCameraOpen(false);
       toast({ title: 'Attendance marked', description: `${currentClass}` });
-      // NOTE: Persisting attendance requires Supabase/backend integration.
+      
+      if (onAttendanceUpdate) {
+        onAttendanceUpdate();
+      }
     } catch (err: any) {
       setScanStatus('error');
       const message = err?.message || 'Failed to read QR';

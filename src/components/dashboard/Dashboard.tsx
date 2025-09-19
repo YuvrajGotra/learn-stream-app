@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigation } from '@/components/ui/navigation';
 import { AttendanceWidget } from './AttendanceWidget';
 import { QRAttendance } from './QRAttendance';
 import { ScheduleWidget } from './ScheduleWidget';
-import { ActivitySuggestions } from './ActivitySuggestions';
+import { ActivitiesWidget } from './ActivitiesWidget';
 import { FaceRecognition } from './FaceRecognition';
+import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -23,23 +24,78 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
   const [activeView, setActiveView] = useState('dashboard');
 
-  // Mock data - in a real app, this would come from API
-  const mockAttendanceData = {
-    present: userRole === 'student' ? 18 : 25,
-    absent: userRole === 'student' ? 2 : 3,
-    late: userRole === 'student' ? 1 : 2,
-    total: userRole === 'student' ? 21 : 30,
+  const [attendanceData, setAttendanceData] = useState<any>(null);
+  const [scheduleData, setScheduleData] = useState<any[]>([]);
+  const [activitiesData, setActivitiesData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [userRole]);
+
+  const loadDashboardData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Load attendance data
+      if (userRole === 'student') {
+        const { data: attendanceRecords } = await supabase
+          .from('attendance_records')
+          .select('*')
+          .eq('student_id', user.id);
+        
+        const total = attendanceRecords?.length || 0;
+        const present = attendanceRecords?.filter(r => r.status === 'present').length || 0;
+        const late = attendanceRecords?.filter(r => r.status === 'late').length || 0;
+        const absent = total - present - late;
+        
+        setAttendanceData({ present, absent, late, total });
+      } else {
+        // For teachers, get overall class attendance
+        const { data: attendanceRecords } = await supabase
+          .from('attendance_records')
+          .select('*');
+        
+        const total = attendanceRecords?.length || 0;
+        const present = attendanceRecords?.filter(r => r.status === 'present').length || 0;
+        const late = attendanceRecords?.filter(r => r.status === 'late').length || 0;
+        const absent = total - present - late;
+        
+        setAttendanceData({ present, absent, late, total });
+      }
+
+      // Load schedule data
+      const { data: schedules } = await supabase
+        .from('schedules')
+        .select('*')
+        .order('start_time', { ascending: true });
+      
+      setScheduleData(schedules || []);
+
+      // Load activities data
+      if (userRole === 'teacher') {
+        const { data: activities } = await supabase
+          .from('activities')
+          .select('*')
+          .eq('teacher_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        setActivitiesData(activities || []);
+      } else {
+        const { data: activities } = await supabase
+          .from('activities')
+          .select('*')
+          .order('due_date', { ascending: true });
+        
+        setActivitiesData(activities || []);
+      }
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const mockSchedule = [
-    { id: '1', subject: 'Mathematics', time: '9:00 AM', room: 'Room 101', teacher: 'Dr. Smith', status: 'completed' as const },
-    { id: '2', subject: 'Computer Science', time: '10:30 AM', room: 'Lab 201', teacher: 'Prof. Johnson', status: 'current' as const },
-    { id: '3', subject: 'Free Period', time: '12:00 PM', room: '', teacher: '', status: 'free' as const },
-    { id: '4', subject: 'Physics', time: '1:30 PM', room: 'Room 103', teacher: 'Dr. Wilson', status: 'upcoming' as const },
-    { id: '5', subject: 'Literature', time: '3:00 PM', room: 'Room 205', teacher: 'Ms. Davis', status: 'upcoming' as const },
-  ];
-
-  const mockStudentInterests = ['programming', 'mathematics', 'digital art'];
 
   const DashboardContent = () => (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
@@ -71,7 +127,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Today's Classes</p>
-              <p className="text-2xl font-bold text-primary">5</p>
+              <p className="text-2xl font-bold text-primary">
+                {scheduleData.filter(s => {
+                  const today = new Date();
+                  const scheduleDay = new Date(s.start_time);
+                  return scheduleDay.toDateString() === today.toDateString();
+                }).length}
+              </p>
             </div>
             <BookOpen className="h-8 w-8 text-primary/50" />
           </div>
@@ -82,7 +144,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
             <div>
               <p className="text-sm text-muted-foreground">Attendance Rate</p>
               <p className="text-2xl font-bold text-success">
-                {Math.round((mockAttendanceData.present / mockAttendanceData.total) * 100)}%
+                {attendanceData ? Math.round((attendanceData.present / Math.max(attendanceData.total, 1)) * 100) : 0}%
               </p>
             </div>
             <BarChart3 className="h-8 w-8 text-success/50" />
@@ -93,10 +155,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">
-                {userRole === 'student' ? 'Goals Completed' : 'Active Students'}
+                {userRole === 'student' ? 'Active Activities' : 'Total Activities'}
               </p>
               <p className="text-2xl font-bold text-warning">
-                {userRole === 'student' ? '3/5' : '28'}
+                {activitiesData.length}
               </p>
             </div>
             {userRole === 'student' ? (
@@ -111,10 +173,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">
-                {userRole === 'student' ? 'Points Earned' : 'Classes Today'}
+                {userRole === 'student' ? 'Pending Submissions' : 'Classes Today'}
               </p>
               <p className="text-2xl font-bold text-secondary-accent">
-                {userRole === 'student' ? '285' : '6'}
+                {userRole === 'student' 
+                  ? activitiesData.filter(a => !a.submitted_at).length 
+                  : scheduleData.filter(s => {
+                      const today = new Date();
+                      const scheduleDay = new Date(s.start_time);
+                      return scheduleDay.toDateString() === today.toDateString();
+                    }).length
+                }
               </p>
             </div>
             <Award className="h-8 w-8 text-secondary-accent/50" />
@@ -126,38 +195,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-6">
-          <ScheduleWidget schedule={mockSchedule} userRole={userRole} />
+          <ScheduleWidget schedule={scheduleData} userRole={userRole} onScheduleUpdate={loadDashboardData} />
           
-          {userRole === 'student' && (
-            <ActivitySuggestions 
-              studentInterests={mockStudentInterests}
-              freePeriodDuration={90}
-            />
+          {userRole === 'student' ? (
+            <ActivitiesWidget activities={activitiesData} userRole={userRole} onActivitiesUpdate={loadDashboardData} />
+          ) : (
+            <ActivitiesWidget activities={activitiesData} userRole={userRole} onActivitiesUpdate={loadDashboardData} />
           )}
         </div>
 
         {/* Right Column */}
         <div className="space-y-6">
-          <AttendanceWidget data={mockAttendanceData} userRole={userRole} />
-          <QRAttendance userRole={userRole} />
-          <FaceRecognition userRole={userRole} />
-          
-          {userRole === 'teacher' && (
-            <Card className="p-6 bg-gradient-card shadow-card">
-              <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <Button variant="academic" className="w-full" size="sm">
-                  Take Class Attendance
-                </Button>
-                <Button variant="outline" className="w-full" size="sm">
-                  View Student Reports
-                </Button>
-                <Button variant="outline" className="w-full" size="sm">
-                  Schedule Announcement
-                </Button>
-              </div>
-            </Card>
-          )}
+          <AttendanceWidget data={attendanceData} userRole={userRole} />
+          <QRAttendance userRole={userRole} onAttendanceUpdate={loadDashboardData} />
+          <FaceRecognition userRole={userRole} onAttendanceUpdate={loadDashboardData} />
         </div>
       </div>
     </div>

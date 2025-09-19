@@ -14,6 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          attachments: Json | null
+          class_id: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          max_marks: number | null
+          teacher_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attachments?: Json | null
+          class_id?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          max_marks?: number | null
+          teacher_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attachments?: Json | null
+          class_id?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          max_marks?: number | null
+          teacher_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      activity_submissions: {
+        Row: {
+          activity_id: string
+          attachments: Json | null
+          created_at: string
+          graded_at: string | null
+          id: string
+          marks_awarded: number | null
+          status: string
+          student_id: string
+          submission_text: string | null
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          activity_id: string
+          attachments?: Json | null
+          created_at?: string
+          graded_at?: string | null
+          id?: string
+          marks_awarded?: number | null
+          status?: string
+          student_id: string
+          submission_text?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string
+          attachments?: Json | null
+          created_at?: string
+          graded_at?: string | null
+          id?: string
+          marks_awarded?: number | null
+          status?: string
+          student_id?: string
+          submission_text?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       attendance_records: {
         Row: {
           attendance_type: string
@@ -121,6 +202,45 @@ export type Database = {
           student_id?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      schedules: {
+        Row: {
+          class_id: string
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          room: string | null
+          start_time: string
+          subject: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          room?: string | null
+          start_time: string
+          subject: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          room?: string | null
+          start_time?: string
+          subject?: string
+          teacher_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
